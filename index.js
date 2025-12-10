@@ -9,21 +9,17 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON
 app.use(express.json());
 
-// Zod schema to validate the numbers
+// Zod schema to validate the numbers - using coerce to convert strings to numbers
 const sumSchema = z.object({
-  num1: z.number(),
-  num2: z.number(),
+  num1: z.coerce.number(),
+  num2: z.coerce.number(),
 });
 
 // Endpoint to sum two numbers
 app.get('/sum', async (req, res) => {
   try {
-    // Parse query parameters
-    const num1 = parseFloat(req.query.num1);
-    const num2 = parseFloat(req.query.num2);
-
-    // Validate using zod
-    const validation = sumSchema.safeParse({ num1, num2 });
+    // Validate query parameters using zod
+    const validation = sumSchema.safeParse(req.query);
     
     if (!validation.success) {
       return res.status(400).json({ 
@@ -31,6 +27,8 @@ app.get('/sum', async (req, res) => {
         details: validation.error.issues 
       });
     }
+
+    const { num1, num2 } = validation.data;
 
     // Calculate sum using lodash
     const sum = _.add(num1, num2);
